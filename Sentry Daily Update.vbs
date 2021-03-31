@@ -3,32 +3,41 @@
 ' 	DAILY MEMBERS UPDATE VIA REST API
 '
 '	Created:		15/10/2014
-'	Modified:		12/10/2015
-'	Version:		1.2
+'	Modified:		30/03/2021
+'	Version:		1.3
 '	Author:			Jim Adamson
 '	Description:	A Visual Basic script to download patron data from the Ex Libris's Alma Analytics RESTful API, and write the data to a comma-separated (CSV) file,
 '					with the intention that the output file will then be 'picked up' by Sentry's Daily Update function, according to the Daily Update file path definition and schedule.
 '
 '	== Prerequisites ==
-'	* A working Alma Analytics report, with dates formatted according to Sentry's expectations
-'	* An application profile must be created on the developers.exlibrisgroup.com site with read permissions for the Analytics API. Create the profile using your Institutional username/password. You will then have an API Key to add to this script.
+'	* A working Alma Analytics report, with expiry dates formatted according to Sentry's expectations, DD/MM/YYYY
+'	* An application profile must be created on the developers.exlibrisgroup.com site with read permissions for the Analytics API. Create the profile using your Institutional username/password. You will then have an API Key to use with this script.
 '
-'	== Editing this script ==
-'	The values for the CONSTANTS within the lines surrounded by asterisks are the basic changes you will need to make to this script.
-'	Beyond that you will probably need to make some adjustments to allow for a differing number of columns in your report; this script assumes 5 columns.
+'	== Usage ==
+'	Open a command prompt and set the API key as a 'user' environment variable:
+' setx SENTRY_DU_APIKEY xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+' The following named arguments exist, and should be appended to the base command: cscript.exe //nologo "Sentry Daily Update.vbs"
+' Mandatory:
+' /emailsender:sendinguser@domain.org 
+' /emailrecipient:receivinguser@domain.org
+' /emailsmtp:smtp.domain.org
+' /reportpath:%2Fpercent%2Fencoded%2Fpath%2Fsto%2Freport
 '
-'	== Testing this script ==
-'	Open a command prompt and enter 'cscript.exe //nologo aa_api_req_v1.2_public.vbs'
-'
+' OptionaL:
+' /emailsubjectprefix:"Some subject prefix: "
+' /outputfilename:users.csv
+' /outputfilerelativepath:.
+' /apiregion:cn ( North America = na, Europe = eu (default), Asia Pacific = ap, Canada = ca, China = cn )
+' /retryattempts:10
+' /rowlimit:2000
+' 
 '	== Scheduling this script ==
 '	This script can be run automatically by adding a job to Windows Task Scheduler. Example:
 '	<Command>cscript.exe</Command>
-'	<Arguments>//nologo "c:\path\to\aa_api_req_v1.2_public.vbs"</Arguments>
+'	<Arguments>//nologo "c:\path\to\Sentry Daily Update.vbs" /emailsender:sendinguser@domain.org /emailrecipient:receivinguser@domain.org /emailsmtp:smtp.domain.org /reportpath:%2Fpercent%2Fencoded%2Fpath%2Fsto%2Freport</Arguments>
 '	<WorkingDirectory>c:\path\to</WorkingDirectory>
 '
-'	== Advice ==
-' 	* You'll want to schedule this script to run daily at a time JUST BEFORE the Sentry Daily Update is scheduled to run. The script will take a few minutes to run but to be safe allow at least 10 minutes.
-'	* Store this script on a secure drive and set the permissions as appropriate to avoid revealing the embedded API Key to people who might abuse it.
+' You'll want to schedule this script to run daily at a time JUST BEFORE the Sentry Daily Update is scheduled to run. The script will take a few minutes to run but to be safe allow at least 10 minutes.
 '
 '	== Web pages that may be of interest ==
 '	https://developers.exlibrisgroup.com/alma/apis
@@ -40,25 +49,85 @@
 '********************************************************************
 
 Option Explicit
+Dim colargs,API_KEY,BASE_URL,ERROR_EMAIL_SENDER,ERROR_EMAIL_RECIPIENT,ERROR_EMAIL_SMTP,ERROR_EMAIL_SUBJECT,AA_REPORT_PATH,objShell,OUTPUT_FILE_NAME,OUTPUT_FILE_PATH,RETRY_ATTEMPTS,ROW_LIMIT
+Set colArgs = WScript.Arguments.Named
+Set objShell = WScript.CreateObject("WScript.Shell")
 
-'************** Edit these CONSTANTS ******************************
-'Const AA_REPORT_PATH = "%2Fshared%2FYork University%2FReports%2FSentry%2FSentry%20user%20export%20(Jtest)%20-%20York"
-Const AA_REPORT_PATH = "%2Fshared%2FYork%20University%2FReports%2FSentry%2FSentry%20user%20export%20PBD2%20-%20York"
-Const API_KEY = "l7xxd1e52027a1324b26b63117efa78e3f79"
-Const BASE_URL = "https://api-eu.hosted.exlibrisgroup.com/almaws/v1/analytics/reports?"
-Const ERROR_EMAIL_RECIPIENT = "infodir-digital+sentry-daily-update@york.ac.uk"
-Const ERROR_EMAIL_SENDER = "do-not-reply@york.ac.uk"
-Const ERROR_EMAIL_SMTP = "smtp.york.ac.uk"
-Const ERROR_EMAIL_SUBJECT = "Sentry Daily Update: "
-Const OUTPUT_FILE_NAME = "daily_update.csv"
-Const OUTPUT_FILE_PATH = ".."
-Const RETRY_ATTEMPTS = 5
-'Const ROW_LIMIT = "25"
-Const ROW_LIMIT = "1000"
-'******************************************************************
+' Mandatory
+If Not objShell.Environment("USER").Item("SENTRY_DU_APIKEY") = "" Then
+  API_KEY = objShell.Environment("USER").Item("SENTRY_DU_APIKEY")
+Else
+  WScript.Echo "An API key must be set as a user environment variable with name SENTRY_DU_APIKEY"
+  WScript.Quit 1
+End If
+
+If colargs.Exists("emailsender") Then
+  ERROR_EMAIL_SENDER = colArgs.Item("emailsender")
+Else
+  WScript.Echo "A sender email address must be supplied using /emailsender:sendinguser@domain.org"
+  WScript.Quit 1
+End If
+
+If colargs.Exists("emailrecipient") Then
+  ERROR_EMAIL_RECIPIENT = colArgs.Item("emailrecipient")
+Else 
+  WScript.Echo "A recipient email address must be supplied using /emailrecipient:receivinguser@domain.org"
+  WScript.Quit 1
+End If
+
+If colargs.Exists("emailsmtp") Then
+  ERROR_EMAIL_SMTP = colArgs.Item("emailsmtp")
+Else 
+  WScript.Echo "An SMTP server must be supplied using /emailsmtp:smtp.domain.org"
+  WScript.Quit 1
+End If
+
+If colargs.Exists("reportpath") Then
+  AA_REPORT_PATH = colArgs.Item("reportpath")
+Else 
+  WScript.Echo "An Alma Analytics report path must be supplied using /reportpath:%2Fpercent%2Fencoded%2Fpath%2Fsto%2Freport"
+  WScript.Quit 1
+End If
+
+' Optional
+If colargs.Exists("emailsubjectprefix") Then
+  ERROR_EMAIL_SUBJECT = colArgs.Item("emailsubjectprefix")
+Else 
+  ERROR_EMAIL_SUBJECT = "Sentry Daily Update: "
+End If
+
+If colargs.Exists("outputfilename") Then
+  OUTPUT_FILE_NAME = colArgs.Item("outputfilename")
+Else 
+  OUTPUT_FILE_NAME = "daily_update.csv"
+End If
+
+If colargs.Exists("outputfilerelativepath") Then
+  OUTPUT_FILE_PATH = colArgs.Item("outputfilerelativepath")
+Else 
+  OUTPUT_FILE_PATH = "."
+End If
+
+If colargs.Exists("apiregion") Then
+  BASE_URL = "https://api-" & colargs.Exists("apiregion") & ".hosted.exlibrisgroup.com/almaws/v1/analytics/reports?"
+Else 
+  BASE_URL = "https://api-eu.hosted.exlibrisgroup.com/almaws/v1/analytics/reports?"
+End If
+
+If colargs.Exists("retryattempts") Then
+  RETRY_ATTEMPTS = colArgs.Item("retryattempts")
+Else 
+  RETRY_ATTEMPTS = 5
+End If
+
+If colargs.Exists("rowlimit") Then
+  ROW_LIMIT = colArgs.Item("rowlimit")
+Else 
+  ROW_LIMIT = 1000
+End If
 
 Const FOR_READING = 1, FOR_WRITING = 2, FOR_APPENDING = 8
-Dim allDone,child,column0,column1,column2,column3,csvFile,csvFileName,csvLine,emailObj,emailConfig,fail,fin,fso,objShell,remoteError,restReq,restXml,retryCount,row,rowCount,rows,token,url
+Dim allDone,child,column0,column1,column2,column3,csvFile,csvFileName,csvLine,emailObj,emailConfig,fail,fin,fso,remoteError,restReq,restXml,retryCount,row,rowCount,rows,token,url
 
 fail = false
 rowCount = 0
