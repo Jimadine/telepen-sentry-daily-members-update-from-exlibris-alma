@@ -286,6 +286,6 @@ REM If the script completed successfully an email is sent. The number of rows re
 'End If
 
 REM An email is sent when less than 20000 rows were returned, indicating a problem because typically there are always more than 20000 user records at York.
-If rowCount < 20000 Then
+If rowCount < 20000 And fail = false Then
 	sendEmail "Rows written report", rowCount, ""
 End If
