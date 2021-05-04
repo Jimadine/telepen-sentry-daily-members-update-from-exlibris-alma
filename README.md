@@ -46,6 +46,6 @@ A scheduled task export XML file from that in use at the UoY is included in this
 #### Web pages that may be of interest
 - https://developers.exlibrisgroup.com/alma/apis
 - https://developers.exlibrisgroup.com/blog/How-we-re-building-APIs-at-Ex-Libris
--https://developers.exlibrisgroup.com/alma/apis/analytics
--https://developers.exlibrisgroup.com/blog/Working-with-Analytics-REST-APIs
--https://developers.exlibrisgroup.com/blog/alma_sentry_integration
+- https://developers.exlibrisgroup.com/alma/apis/analytics
+- https://developers.exlibrisgroup.com/blog/Working-with-Analytics-REST-APIs
+- https://developers.exlibrisgroup.com/blog/alma_sentry_integration
