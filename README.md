@@ -13,7 +13,7 @@ setx SENTRY_DU_APIKEY xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 A number of named arguments exist, and should be appended to the base command as follows:
 ```
-C:\Windows\System32\cscript.exe //nologo "Sentry Daily Update.vbs" /named:argument
+C:\Windows\System32\cscript.exe //nologo "sentry-daily-update.vbs" /named:argument
 ```
 Mandatory arguments:
 ```
@@ -36,7 +36,7 @@ Optional arguments:
 This script can be run automatically by adding a job to Windows Task Scheduler. Example:
 ```
 <Command>C:\Windows\System32\cscript.exe</Command>
-<Arguments>//nologo "c:\path\to\Sentry Daily Update.vbs" /emailsender:sendinguser@domain.org /emailrecipient:receivinguser@domain.org /emailsmtp:smtp.domain.org /reportpath:%2Fpercent%2Fencoded%2Fpath%2Fsto%2Freport</Arguments>
+<Arguments>//nologo "c:\path\to\sentry-daily-update.vbs" /emailsender:sendinguser@domain.org /emailrecipient:receivinguser@domain.org /emailsmtp:smtp.domain.org /reportpath:%2Fpercent%2Fencoded%2Fpath%2Fsto%2Freport</Arguments>
 <WorkingDirectory>c:\path\to</WorkingDirectory>
 ```
 You'll want to schedule this script to run daily at a time JUST BEFORE the Sentry Daily Update is scheduled to run. The script will take a few minutes to run but to be safe allow at least 10 minutes.
