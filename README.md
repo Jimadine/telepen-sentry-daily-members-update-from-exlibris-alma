@@ -7,7 +7,7 @@ This is a Visual Basic script to download patron data from the Ex Libris's Alma 
 - An application profile must be created on the developers.exlibrisgroup.com site with read permissions for the Analytics API. Create the profile using your Institutional username/password. You will then have an API Key to use with this script.
 
 #### Usage
-Open a command prompt and set the API key in the SENTRY_DU_APIKEY 'user' environment variable:
+Open a command prompt and set the API key in the `SENTRY_DU_APIKEY` 'user' environment variable:
 ```
 setx SENTRY_DU_APIKEY xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
