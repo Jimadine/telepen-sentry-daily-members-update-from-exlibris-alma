@@ -41,8 +41,6 @@ This script can be run automatically by adding a job to Windows Task Scheduler. 
 ```
 You'll want to schedule this script to run daily at a time JUST BEFORE the Sentry Daily Update is scheduled to run. The script will take a few minutes to run but to be safe allow at least 10 minutes.
 
-A scheduled task export XML file from that in use at the UoY is included in this repo.
-
 #### Web pages that may be of interest
 - https://developers.exlibrisgroup.com/alma/apis
 - https://developers.exlibrisgroup.com/blog/How-we-re-building-APIs-at-Ex-Libris
