@@ -33,7 +33,7 @@ Optional arguments:
 /rowlimit:2000
 ```
 #### Scheduling this script
-This script can be run automatically by adding a job to Windows Task Scheduler. Example:
+This script can be run automatically by adding a task to Windows Task Scheduler. Example:
 
 Command: `C:\Windows\System32\cscript.exe`  
 Arguments: `//nologo "c:\path\to\sentry-daily-update.vbs" /emailsender:sendinguser@domain.org /emailrecipient:receivinguser@domain.org /emailsmtp:smtp.domain.org /reportpath:%2Fpercent%2Fencoded%2Fpath%2Fsto%2Freport`  
