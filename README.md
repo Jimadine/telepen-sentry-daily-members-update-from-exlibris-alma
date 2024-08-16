@@ -34,11 +34,11 @@ Optional arguments:
 ```
 #### Scheduling this script
 This script can be run automatically by adding a job to Windows Task Scheduler. Example:
-```
-<Command>C:\Windows\System32\cscript.exe</Command>
-<Arguments>//nologo "c:\path\to\sentry-daily-update.vbs" /emailsender:sendinguser@domain.org /emailrecipient:receivinguser@domain.org /emailsmtp:smtp.domain.org /reportpath:%2Fpercent%2Fencoded%2Fpath%2Fsto%2Freport</Arguments>
-<WorkingDirectory>c:\path\to</WorkingDirectory>
-```
+
+Command: `C:\Windows\System32\cscript.exe`  
+Arguments: `//nologo "c:\path\to\sentry-daily-update.vbs" /emailsender:sendinguser@domain.org /emailrecipient:receivinguser@domain.org /emailsmtp:smtp.domain.org /reportpath:%2Fpercent%2Fencoded%2Fpath%2Fsto%2Freport`  
+WorkingDirectory: `c:\path\to`
+
 You'll want to schedule this script to run daily at a time JUST BEFORE the Sentry Daily Update is scheduled to run. The script will take a few minutes to run but to be safe allow at least 10 minutes.
 
 If you want to run the script without showing a `cscript.exe` window, replace `cscript.exe` with `wscript.exe` in the `Command` to run.
