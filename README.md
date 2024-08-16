@@ -46,6 +46,34 @@ Start in: `c:\path\to`
 
 You'll want to schedule this script to run daily at a time JUST BEFORE the Sentry Daily Update is scheduled to run. The script will take a few minutes to run but to be safe allow at least 10 minutes. Note that it's recommended to use double-quotes not single-quotes around parameter values in Windows scheduled tasks, [otherwise odd stuff can happen](https://stackoverflow.com/questions/44594179/pass-powershell-parameters-within-task-scheduler#comment110388918_44594978).
 
+If you want to run the script without showing a Powershell window, there are two options:
+* Add `-WindowStyle Hidden` to the first set of parameters (before the `-File` parameter). This is not ideal because the user will still see a flash of window before the parameter is processed.
+* Use a VBScript wrapper script to launch Powershell, so your scheduled task Command/Arguments becomes:
+
+Command: `C:\Windows\System32\WScript.exe`  
+Arguments: `//B silent.vbs C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -NoLogo -NoProfile -ExecutionPolicy ByPass -File "C:\path\to\sentry-daily-update.ps1" -EmailSender "do-not-reply@example.org" -EmailRecipient "john.smith@example.org" -EmailSmtp "smtp.example.org" -ReportPath "/shared/Example University/Reports/Sentry/Sentry user export"`  
+Start in: `c:\path\to`
+
+The `silent.vbs` wrapper script needs to be in the `Start in` directory:
+
+```
+On Error Resume Next
+
+ReDim args(WScript.Arguments.Count-1)
+
+For i = 0 To WScript.Arguments.Count-1
+    If InStr(WScript.Arguments(i), " ") > 0 Then
+        args(i) = Chr(34) & WScript.Arguments(i) & Chr(34)
+    Else
+        args(i) = WScript.Arguments(i)
+        End If
+
+Next
+
+CreateObject("WScript.Shell").Run Join(args, " "), 0, False
+```
+This does the job, completely eliminating the window, but again, not perfect for those who like minimalism.
+
 #### Web pages that may be of interest
 - https://developers.exlibrisgroup.com/alma/apis
 - https://developers.exlibrisgroup.com/blog/How-we-re-building-APIs-at-Ex-Libris
