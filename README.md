@@ -41,6 +41,8 @@ This script can be run automatically by adding a job to Windows Task Scheduler. 
 ```
 You'll want to schedule this script to run daily at a time JUST BEFORE the Sentry Daily Update is scheduled to run. The script will take a few minutes to run but to be safe allow at least 10 minutes.
 
+If you want to run the script without showing a `cscript.exe` window, replace `cscript.exe` with `wscript.exe` in the `Command` to run.
+
 #### Web pages that may be of interest
 - https://developers.exlibrisgroup.com/alma/apis
 - https://developers.exlibrisgroup.com/blog/How-we-re-building-APIs-at-Ex-Libris
