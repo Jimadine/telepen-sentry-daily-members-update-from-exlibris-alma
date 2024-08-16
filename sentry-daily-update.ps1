@@ -39,6 +39,9 @@
   .PARAMETER EmailSubjectPrefix
     This sets the first part of the subject line for any failure related emails. You will probably not need to explicitly set this at runtime. By default this is set to "Sentry Daily Update:". [String] [Optional]
 
+  .PARAMETER EnableEmail
+    This switch parameter enables emailing error messages. When enabled, the parameters EmailRecipient, EmailSender and EmailSmtp become mandatory. [Switch] [Optional]
+
   .PARAMETER OutputFilename
     This sets the filename of the output file. You will probably not need to explicitly set this at runtime. By default this is set to daily_update.csv. [String] [Optional]
 
@@ -59,28 +62,67 @@
     This sets the number of rows to gather per request. There will likely be multiple requests per scrip-run. You will probably not need to explicitly set this at runtime. By default this is set to 1000. [Int] [Optional]
 
   .EXAMPLE
-  PS> ./sentry-daily-update.ps1 -EmailSender "do-not-reply@example.org" -EmailRecipient "john.smith@example.org" -EmailSmtp "smtp.example.org" -ReportPath "/shared/Example University/Reports/Sentry/Sentry user export"
+  PS> ./sentry-daily-update.ps1 -EmailSender "do-not-reply@example.org" -EnableEmail -EmailRecipient "john.smith@example.org" -EmailSmtp "smtp.example.org" -ReportPath "/shared/Example University/Reports/Sentry/Sentry user export"
 #>
-
+[CmdletBinding(DefaultParameterSetName='logonly')]
 param (
+    [Parameter(ParameterSetName='logonly')]
     [string]$ApiKeysDirectoryPath = "$PSScriptRoot\auth",
+
+    [Parameter(ParameterSetName='logonly')]
     [ValidateSet("ap", "ca", "cn", "eu", "na")]
     [string]$ApiRegion = "eu",
+
+    [Parameter(ParameterSetName='logonly')]
     [string]$BasePath = '/almaws/v1/analytics/reports',
+
+    [Parameter(ParameterSetName='logonly')]
     [string]$BaseUrl = 'https://api-eu.hosted.exlibrisgroup.com',
-    [Parameter(Mandatory=$true)][string]$EmailRecipient,
-    [Parameter(Mandatory=$true)][string]$EmailSender,
-    [Parameter(Mandatory=$true)][string]$EmailSmtp,
+
+    [Parameter(ParameterSetName='email', Mandatory=$true)]
+    [string]$EmailRecipient,
+
+    [Parameter(ParameterSetName='email', Mandatory=$true)]
+    [string]$EmailSender,
+
+    [Parameter(ParameterSetName='email', Mandatory=$true)]
+    [string]$EmailSmtp,
+
+    [Parameter(ParameterSetName='logonly')]
     [string]$EmailSubjectPrefix = "Sentry Daily Update:",
+
+    [Parameter(ParameterSetName='email')]
+    [switch]$EnableEmail,
+
+    [Parameter(ParameterSetName='logonly')]
+    [string]$LogFilePath = '.\sentry-daily-update.log',
+
+    [Parameter(ParameterSetName='logonly')]
     [string]$OutputFilename = "daily_update.csv",
+
+    [Parameter(ParameterSetName='logonly')]
     [string]$OutputFileDirectoryPath = $PSScriptRoot,
+
+    [Parameter(ParameterSetName='logonly')]
     [int]$ProblemRowCount = 20000,
-    [Parameter(Mandatory=$true)][string]$ReportPath,
+
+    [Parameter(ParameterSetName='email', Mandatory=$true)]
+    [Parameter(ParameterSetName='logonly', Mandatory=$true)]
+    [string]$ReportPath,
+
+    [Parameter(ParameterSetName='logonly')]
     [int]$RetryAttempts = 5,
+
+    [Parameter(ParameterSetName='logonly')]
     [int]$RowLimit = 1000
 )
 
 $ErrorActionPreference = "Stop"
+
+If ((Test-Path -Path (Split-Path $LogFilePath)) -ne $true) {
+  Write-Warning "$(Split-Path $LogFilePath) path doesn't exist"
+  exit 1
+}
 
 If ((Test-Path -Path $ApiKeysDirectoryPath) -ne $true) {
     Write-Warning "${ApiKeysDirectoryPath} path doesn't exist - creating missing subfolder"
@@ -139,19 +181,28 @@ do {
                 Copy-Item -Path $tmpCsvFile -Destination "$OutputFileDirectoryPath\$OutputFilename"
                 Remove-Item -Path $tmpCsvFile
             } elseif ($objRemoteError) {
-                Send-MailMessage -From $EmailSender -To $EmailRecipient -SmtpServer $EmailSmtp -Subject "${EmailSubjectPrefix} XML response error" -Body "Total rows written: ${rowCount}`nError description: ${objRemoteError}"
+                if ($EnableEmail) {
+                  Send-MailMessage -From $EmailSender -To $EmailRecipient -SmtpServer $EmailSmtp -Subject "${EmailSubjectPrefix} XML response error" -Body "Total rows written: ${rowCount}`nError description: ${objRemoteError}"
+                }
+                "{0:yyyy-MM-dd HH:mm:ss}: XML response error - Total rows written: {1} Error description: {2}" -f $(Get-Date), $rowCount, $objRemoteError | Tee-Object -FilePath $LogFilePath -Append
                 $success = $false
                 break
             }
         } else {
-            Send-MailMessage -From $EmailSender -To $EmailRecipient -SmtpServer $EmailSmtp -Subject "${EmailSubjectPrefix} Unexpected HTTP response code" -Body "Total rows written: ${rowCount}`nError description: $(objRestReq.StatusText)"
+            if ($EnableEmail) {
+              Send-MailMessage -From $EmailSender -To $EmailRecipient -SmtpServer $EmailSmtp -Subject "${EmailSubjectPrefix} Unexpected HTTP response code" -Body "Total rows written: ${rowCount}`nError description: $(objRestReq.StatusText)"
+            }
+            "{0:yyyy-MM-dd HH:mm:ss}: Unexpected HTTP response code - Total rows written: {1} Error description: {2}" -f $(Get-Date), $rowCount, $(objRestReq.StatusText) | Tee-Object -FilePath $LogFilePath -Append
             $success = $false
             break
         }
     } catch {
         $retryCount++
         if ($retryCount -eq $RetryAttempts) {
-            Send-MailMessage -From $EmailSender -To $EmailRecipient -SmtpServer $EmailSmtp -Subject "${EmailSubjectPrefix} $($_.Exception.GetType().Name)" -Body "Total rows written: ${rowCount}`nError description: $($_.Exception.Message)"
+            if ($EnableEmail) {
+              Send-MailMessage -From $EmailSender -To $EmailRecipient -SmtpServer $EmailSmtp -Subject "${EmailSubjectPrefix} $($_.Exception.GetType().Name)" -Body "Total rows written: ${rowCount}`nError description: $($_.Exception.Message)"
+            }
+            "{0:yyyy-MM-dd HH:mm:ss}: {1} - Total rows written: {2} Error description: {3}" -f $(Get-Date), $($_.Exception.GetType().Name), $rowCount, $($_.Exception.Message) | Tee-Object -FilePath $LogFilePath -Append
             $success = $false
         }
     }
@@ -161,5 +212,8 @@ do {
 
 # Handle occasional cases where all the records weren't returned, but the script finished normally
 if ($rowCount -lt $ProblemRowCount -and $success -eq $true) {
-    Send-MailMessage -From $EmailSender -To $EmailRecipient -SmtpServer $EmailSmtp -Subject "${EmailSubjectPrefix} Rows written report" -Body "Total rows written: ${rowCount}"
+    if ($EnableEmail) {
+      Send-MailMessage -From $EmailSender -To $EmailRecipient -SmtpServer $EmailSmtp -Subject "${EmailSubjectPrefix} Rows written report" -Body "Total rows written: ${rowCount}"
+    }
+    "{0:yyyy-MM-dd HH:mm:ss}: Rows written report - Total rows written: {1}" -f $(Get-Date), $rowCount | Tee-Object -FilePath $LogFilePath -Append
 }

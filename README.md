@@ -28,6 +28,7 @@ Optional parameters with example values:
 -BasePath /almaws/v1/analytics/reports
 -BaseUrl https://api-eu.hosted.exlibrisgroup.com
 -EmailSubjectPrefix "Some subject prefix:"
+-EnableEmail
 -OutputFileDirectoryPath .
 -OutputFilename users.csv
 -ProblemRowCount 30000
@@ -41,7 +42,7 @@ For a full description of the parameters, see the parameter descriptions at the 
 This script can be run automatically by creating a new task in Windows Task Scheduler. The most important pieces of information required for this are the `Command` and `Arguments`. Here's an example:
 
 Command: `C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe`  
-Arguments: `-NoLogo -NoProfile -ExecutionPolicy ByPass -File "C:\path\to\sentry-daily-update.ps1" -EmailSender "do-not-reply@example.org" -EmailRecipient "john.smith@example.org" -EmailSmtp "smtp.example.org" -ReportPath "/shared/Example University/Reports/Sentry/Sentry user export"`  
+Arguments: `-NoLogo -NoProfile -ExecutionPolicy ByPass -File "C:\path\to\sentry-daily-update.ps1" -EnableEmail -EmailSender "do-not-reply@example.org" -EmailRecipient "john.smith@example.org" -EmailSmtp "smtp.example.org" -ReportPath "/shared/Example University/Reports/Sentry/Sentry user export"`  
 Start in: `c:\path\to`
 
 You'll want to schedule this script to run daily at a time JUST BEFORE the Sentry Daily Update is scheduled to run. The script will take a few minutes to run but to be safe allow at least 10 minutes. Note that it's recommended to use double-quotes not single-quotes around parameter values in Windows scheduled tasks, [otherwise odd stuff can happen](https://stackoverflow.com/questions/44594179/pass-powershell-parameters-within-task-scheduler#comment110388918_44594978).
@@ -51,7 +52,7 @@ If you want to run the script without showing a Powershell window, there are two
 * Use a VBScript wrapper script to launch Powershell, so your scheduled task Command/Arguments becomes:
 
 Command: `C:\Windows\System32\WScript.exe`  
-Arguments: `//B silent.vbs C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -NoLogo -NoProfile -ExecutionPolicy ByPass -File "C:\path\to\sentry-daily-update.ps1" -EmailSender "do-not-reply@example.org" -EmailRecipient "john.smith@example.org" -EmailSmtp "smtp.example.org" -ReportPath "/shared/Example University/Reports/Sentry/Sentry user export"`  
+Arguments: `//B silent.vbs C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -NoLogo -NoProfile -ExecutionPolicy ByPass -File "C:\path\to\sentry-daily-update.ps1" -EnableEmail -EmailSender "do-not-reply@example.org" -EmailRecipient "john.smith@example.org" -EmailSmtp "smtp.example.org" -ReportPath "/shared/Example University/Reports/Sentry/Sentry user export"`  
 Start in: `c:\path\to`
 
 The `silent.vbs` wrapper script needs to be in the `Start in` directory:
