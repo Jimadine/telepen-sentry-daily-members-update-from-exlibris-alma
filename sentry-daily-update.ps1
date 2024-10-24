@@ -67,16 +67,20 @@
 [CmdletBinding(DefaultParameterSetName = 'logonly')]
 param (
   [Parameter(ParameterSetName = 'logonly')]
+  [Parameter(ParameterSetName = 'email')]
   [string]$ApiKeysDirectoryPath = "$PSScriptRoot\auth",
 
   [Parameter(ParameterSetName = 'logonly')]
+  [Parameter(ParameterSetName = 'email')]
   [ValidateSet('ap', 'ca', 'cn', 'eu', 'na')]
   [string]$ApiRegion = 'eu',
 
   [Parameter(ParameterSetName = 'logonly')]
+  [Parameter(ParameterSetName = 'email')]
   [string]$BasePath = '/almaws/v1/analytics/reports',
 
   [Parameter(ParameterSetName = 'logonly')]
+  [Parameter(ParameterSetName = 'email')]
   [string]$BaseUrl = 'https://api-eu.hosted.exlibrisgroup.com',
 
   [Parameter(ParameterSetName = 'email', Mandatory = $true)]
@@ -91,29 +95,35 @@ param (
   [Parameter(ParameterSetName = 'logonly')]
   [string]$EmailSubjectPrefix = 'Sentry Daily Update:',
 
-  [Parameter(ParameterSetName = 'email')]
+  [Parameter(ParameterSetName = 'email', Mandatory = $true)]
   [switch]$EnableEmail,
 
   [Parameter(ParameterSetName = 'logonly')]
+  [Parameter(ParameterSetName = 'email')]
   [string]$LogFilePath = '.\sentry-daily-update.log',
 
   [Parameter(ParameterSetName = 'logonly')]
+  [Parameter(ParameterSetName = 'email')]
   [string]$OutputFilename = 'daily_update.csv',
 
   [Parameter(ParameterSetName = 'logonly')]
+  [Parameter(ParameterSetName = 'email')]
   [string]$OutputFileDirectoryPath = $PSScriptRoot,
 
   [Parameter(ParameterSetName = 'logonly')]
+  [Parameter(ParameterSetName = 'email')]
   [int]$ProblemRowCount = 20000,
 
-  [Parameter(ParameterSetName = 'email', Mandatory = $true)]
   [Parameter(ParameterSetName = 'logonly', Mandatory = $true)]
+  [Parameter(ParameterSetName = 'email', Mandatory = $true)]
   [string]$ReportPath,
 
   [Parameter(ParameterSetName = 'logonly')]
+  [Parameter(ParameterSetName = 'email')]
   [int]$RetryAttempts = 5,
 
   [Parameter(ParameterSetName = 'logonly')]
+  [Parameter(ParameterSetName = 'email')]
   [int]$RowLimit = 1000
 )
 
