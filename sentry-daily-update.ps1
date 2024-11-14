@@ -197,7 +197,7 @@ do {
       }
       elseif ($objRemoteError) {
         if ($EnableEmail) {
-          Send-MailMessage -From $EmailSender -To $EmailRecipient -SmtpServer $EmailSmtp -Subject "${EmailSubjectPrefix} XML response error" -Body "Total rows written: ${rowCount}`nError description: ${objRemoteError}${emailFooter}"
+          Send-MailMessage -From $EmailSender -To $($EmailRecipient.Split(',') | ForEach-Object { $_.Trim() }) -SmtpServer $EmailSmtp -Subject "${EmailSubjectPrefix} XML response error" -Body "Total rows written: ${rowCount}`nError description: ${objRemoteError}${emailFooter}"
         }
         '{0:yyyy-MM-dd HH:mm:ss}: XML response error - Total rows written: {1} Error description: {2}' -f $(Get-Date), $rowCount, $objRemoteError | Tee-Object -FilePath $LogFilePath -Append
         $success = $false
@@ -206,7 +206,7 @@ do {
     }
     else {
       if ($EnableEmail) {
-        Send-MailMessage -From $EmailSender -To $EmailRecipient -SmtpServer $EmailSmtp -Subject "${EmailSubjectPrefix} Unexpected HTTP response code" -Body "Total rows written: ${rowCount}`nError description: $(objRestReq.StatusText)${emailFooter}"
+        Send-MailMessage -From $EmailSender -To $($EmailRecipient.Split(',') | ForEach-Object { $_.Trim() }) -SmtpServer $EmailSmtp -Subject "${EmailSubjectPrefix} Unexpected HTTP response code" -Body "Total rows written: ${rowCount}`nError description: $(objRestReq.StatusText)${emailFooter}"
       }
       '{0:yyyy-MM-dd HH:mm:ss}: Unexpected HTTP response code - Total rows written: {1} Error description: {2}' -f $(Get-Date), $rowCount, $(objRestReq.StatusText) | Tee-Object -FilePath $LogFilePath -Append
       $success = $false
@@ -217,7 +217,7 @@ do {
     $retryCount++
     if ($retryCount -eq $RetryAttempts) {
       if ($EnableEmail) {
-        Send-MailMessage -From $EmailSender -To $EmailRecipient -SmtpServer $EmailSmtp -Subject "${EmailSubjectPrefix} $($_.Exception.GetType().Name)" -Body "Total rows written: ${rowCount}`nError description: $($_.Exception.Message)${emailFooter}"
+        Send-MailMessage -From $EmailSender -To $($EmailRecipient.Split(',') | ForEach-Object { $_.Trim() }) -SmtpServer $EmailSmtp -Subject "${EmailSubjectPrefix} $($_.Exception.GetType().Name)" -Body "Total rows written: ${rowCount}`nError description: $($_.Exception.Message)${emailFooter}"
       }
       '{0:yyyy-MM-dd HH:mm:ss}: {1} - Total rows written: {2} Error description: {3}' -f $(Get-Date), $($_.Exception.GetType().Name), $rowCount, $($_.Exception.Message) | Tee-Object -FilePath $LogFilePath -Append
       $success = $false
@@ -230,7 +230,7 @@ do {
 # Handle occasional cases where all the records weren't returned, but the script finished normally
 if ($rowCount -lt $ProblemRowCount -and $success -eq $true) {
   if ($EnableEmail) {
-    Send-MailMessage -From $EmailSender -To $EmailRecipient -SmtpServer $EmailSmtp -Subject "${EmailSubjectPrefix} Rows written report" -Body "Total rows written: ${rowCount}${emailFooter}"
+    Send-MailMessage -From $EmailSender -To $($EmailRecipient.Split(',') | ForEach-Object { $_.Trim() }) -SmtpServer $EmailSmtp -Subject "${EmailSubjectPrefix} Rows written report" -Body "Total rows written: ${rowCount}${emailFooter}"
   }
   '{0:yyyy-MM-dd HH:mm:ss}: Rows written report - Total rows written: {1}' -f $(Get-Date), $rowCount | Tee-Object -FilePath $LogFilePath -Append
 }
