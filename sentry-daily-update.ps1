@@ -210,7 +210,7 @@ function Get-Data {
   }
   do {
     try {
-      $objRestReq = Invoke-WebRequest -Uri $strUrl -Method Get -Headers @{'Authorization' = "apikey ${strApiKey}" } -TimeoutSec 60
+      $objRestReq = Invoke-WebRequest -Uri $strUrl -Method Get -Headers @{'Authorization' = "apikey ${strApiKey}" } -TimeoutSec 60 -UseBasicParsing
       if ($objRestReq.StatusCode -eq 200) {
         $restXml = [xml]$objRestReq.Content
         $objRows = $restXml.report.QueryResult.ResultXml.rowset.GetElementsByTagName('Row')
