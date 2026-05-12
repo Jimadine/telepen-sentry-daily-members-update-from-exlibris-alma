@@ -71,9 +71,9 @@
 #Requires -Version 5.1
 [CmdletBinding(DefaultParameterSetName = 'logonly')]
 param (
-  [Parameter()]
+  [Parameter(Mandatory)]
   [ValidateNotNullorEmpty()]
-  [string]$AlmaServerApiKeyIdentifier = 'AlmaAPIKeyIdentifier',
+  [string]$AlmaServerApiKeyIdentifier,
 
   [ValidateSet('ap', 'ca', 'cn', 'eu', 'na')]
   [ValidateNotNullOrEmpty()]
