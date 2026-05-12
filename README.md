@@ -6,6 +6,23 @@ This is a Powershell script to download patron data from the Ex Libris's Alma An
 - A working Alma Analytics report, with expiry dates formatted according to Sentry's expectations, DD/MM/YYYY
 - An application profile must be created on the developers.exlibrisgroup.com site with read permissions for the Analytics API. Create the profile using your Institutional username/password. You will then have an API Key to use with this script.
 
+#### Getting started
+Open a Powershell window as the account that you wish to use to run the script, then enter:
+```
+Install-Module -Name TUN.CredentialManager -Scope CurrentUser -Force
+```
+
+Add some variables to hold the data for setting up the new credential:
+```
+$credentialIdentifier = Read-Host -Prompt 'Enter the identifier to store the API key under (e.g. AlmaAPIKeyForProd)'
+$secureApiKey = Read-Host -Prompt 'Enter your API key' -AsSecureString
+```
+
+Create the new credential:
+```
+New-StoredCredential -Target $credentialIdentifier -UserName $env:COMPUTERNAME -SecurePassword $secureApiKey -Persist LocalMachine
+```
+
 #### Manual usage
 Although the script is designed to be run as a scheduled task, it might be helpful to run it manually to get a feel for how it works. The first time you run the script, an API key will be requested, so you will want to put this in your paste buffer just before running it.
 
@@ -15,6 +32,7 @@ To begin, open a Powershell window, and `cd` to the directory containing `sentry
 ```
 Mandatory parameters with example values:
 ```
+-AlmaServerApiKeyIdentifier "SomeAlmaKeyIdentifier"
 -EmailRecipient john.smith@example.org
 -EmailSender do-not-reply@example.org
 -EmailSmtp smtp.example.org
@@ -23,7 +41,6 @@ Mandatory parameters with example values:
 
 Optional parameters with example values:
 ```
--ApiKeysDirectoryPath
 -ApiRegion cn
 -BasePath /almaws/v1/analytics/reports
 -BaseUrl https://api-eu.hosted.exlibrisgroup.com
