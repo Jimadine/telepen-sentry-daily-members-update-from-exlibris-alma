@@ -107,19 +107,22 @@ param (
   [Parameter(ParameterSetName = 'logonly')]
   [Parameter(ParameterSetName = 'email')]
   [ValidateScript({
-      # Check that the specified path is syntactically correct
-      If (-not $(Test-Path -Path $_ -IsValid)) {
+      Try {
+        $resolved = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($_)
+      }
+      Catch {
         Throw 'Syntactically invalid log file path'
       }
 
-      # Check that the path specified is a file path
-      If (-not $(Split-Path -Path $_ -Leaf | Where-Object { $_ -match '\.' })) {
-        Throw 'Log file path does not appear to be a file path'
+      # Block existing folder paths
+      If (Test-Path -Path $resolved -PathType Container) {
+        Throw 'The path points to an existing folder, but a file path is required.'
       }
 
       # Check that the parent folder of the path specified exists
-      If (-not (Test-Path -Path $($_ | Split-Path) -PathType Container)) {
-        Throw 'Specified log file parent folder does not exist'
+      $parent = Split-Path -Path $resolved -Parent
+      If (-not (Test-Path -Path $parent -PathType Container)) {
+        Throw 'Specified log file parent folder {0} does not exist' -f $parent
       }
 
       $True
