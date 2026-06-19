@@ -212,6 +212,7 @@ function Get-WindowsCredentialManagerApiKey {
     Remove-Variable -Name credentialObject, BSTR, plainApikey -ErrorAction SilentlyContinue
   }
 }
+
 function Get-Data {
   param (
     [string]$StrUrl,
