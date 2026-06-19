@@ -206,7 +206,7 @@ function Get-WindowsCredentialManagerApiKey {
     Write-Output $plainApikey
   }
   Catch {
-    Throw "Failed to retrieve API key for ${ApiKeyIdentifier}"
+    Throw 'Failed to retrieve API key for {0}' -f $ApiKeyIdentifier
   }
   Finally {
     Remove-Variable -Name credentialObject, BSTR, plainApikey -ErrorAction SilentlyContinue
