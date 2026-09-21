@@ -202,13 +202,14 @@ function Get-WindowsCredentialManagerApiKey {
   Try {
     $credentialObject = Get-StoredCredential -Target $ApiKeyIdentifier -AsCredentialObject -IncludeSecurePassword
     $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($credentialObject.SecurePassword)
-    $plainApikey = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
+    $plainApikey = [System.Runtime.InteropServices.Marshal]::PtrToStringBSTR($BSTR)
     Write-Output $plainApikey
   }
   Catch {
     Throw 'Failed to retrieve API key for {0}' -f $ApiKeyIdentifier
   }
   Finally {
+    [System.Runtime.InteropServices.Marshal]::ZeroFreeBSTR($BSTR)
     Remove-Variable -Name credentialObject, BSTR, plainApikey -ErrorAction SilentlyContinue
   }
 }
